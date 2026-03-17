@@ -9,7 +9,7 @@ on:
 jobs:
   sonar:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    uses: hendafarhani/github-actions-workflows/.github/workflows/sonar.yml@main
+    uses: hendafarhani/microGo/.github/workflows/sonar.yml@main
     with:
       java_version: "21"
       sonar_project_key: "hendafarhani_centralized-config"
