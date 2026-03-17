@@ -9,7 +9,7 @@ on:
 jobs:
   sonar:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    uses: hendafarhani/microGo/.github/workflows/sonar-analysis.yml@main
+    uses: hendafarhani/microGo/.github/workflows/sonar-analysis.yml@24faf462a6eb2f96940a6f05c53b9061e9623832
     with:
       java_version: "21"
       sonar_project_key: "hendafarhani_centralized-config"
