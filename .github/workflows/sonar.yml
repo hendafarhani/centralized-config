@@ -1,0 +1,17 @@
+name: Sonar Centralized Config
+
+on:
+  workflow_run:
+    workflows: ["Build Centralized Config"]
+    types: [completed]
+
+jobs:
+  sonar:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    uses: hendafarhani/github-actions-workflows/.github/workflows/sonar.yml@main
+    with:
+      java_version: "21"
+      sonar_project_key: "hendafarhani_centralized-config"
+      sonar_organization: "hendafarhani"
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
