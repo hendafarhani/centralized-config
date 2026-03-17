@@ -8,8 +8,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  call-build:
-    uses: hendafarhani/microGo/.github/workflows/maven-build.yml@main
-    with:
-      java_version: "21"
-      maven_goal: "verify"
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn verify
