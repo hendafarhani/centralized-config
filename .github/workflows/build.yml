@@ -13,3 +13,81 @@ jobs:
     with:
       java_version: "21"
       maven_goal: "verify"
+
+  # Every service keeps a copy of the config keys it needs in
+  # src/test/resources/application.properties, because tests cannot reach a
+  # config server. Nothing compares that copy to the real thing, so a value can
+  # change here and every service suite stays green while production breaks -
+  # measured: ride-request passed 97/97 with twelve production values corrupted.
+  #
+  # The check lives here rather than in the service pipelines because drift
+  # always starts with an edit to this repository, so this is where the failure
+  # belongs - on the PR that causes it. Service builds check out one repository
+  # and have no ../centralized-config, so they could not run this without taking
+  # a dependency on this repo staying reachable.
+  config-drift:
+    name: Test config drift
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Check out centralized-config
+        uses: actions/checkout@v6
+        with:
+          path: centralized-config
+
+      # Only for .gitmodules - the fleet roster. The script warns when a service
+      # listed there was not checked out below, so adding a submodule without
+      # adding it here surfaces instead of silently going unchecked.
+      - name: Check out the fleet roster
+        uses: actions/checkout@v6
+        with:
+          repository: hendafarhani/microGo
+          path: microGo-roster
+          sparse-checkout: .gitmodules
+          sparse-checkout-cone-mode: false
+
+      # The six services that carry src/test/resources/application.properties.
+      # All of these repositories are public, so the default GITHUB_TOKEN can
+      # read them and no PAT secret is needed.
+      - name: Check out ride-request
+        uses: actions/checkout@v6
+        with:
+          repository: hendafarhani/ride-request
+          path: ride-request
+
+      - name: Check out dashboard-service
+        uses: actions/checkout@v6
+        with:
+          repository: hendafarhani/dashboard-service
+          path: dashboard-service
+
+      - name: Check out driver-location-streamer
+        uses: actions/checkout@v6
+        with:
+          repository: hendafarhani/driver-location-streamer
+          path: driver-location-streamer
+
+      - name: Check out location-saver
+        uses: actions/checkout@v6
+        with:
+          repository: hendafarhani/location-saver
+          path: location-saver
+
+      - name: Check out outbox-publisher-service
+        uses: actions/checkout@v6
+        with:
+          repository: hendafarhani/outbox-publisher-service
+          path: outbox-publisher-service
+
+      - name: Check out simulation-service
+        uses: actions/checkout@v6
+        with:
+          repository: hendafarhani/simulation-service
+          path: simulation-service
+
+      - name: Compare test config against effective config
+        shell: bash
+        run: |
+          mv microGo-roster/.gitmodules .gitmodules
+          python3 centralized-config/.github/scripts/check-config-drift.py "$PWD"
